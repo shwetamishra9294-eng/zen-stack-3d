@@ -1,13 +1,13 @@
-// Zen Stack 3D Storage Manager
+// Zen Stack 3D Storage & Skin Economy Manager
 class StorageManager {
     constructor() {
-        this.KEY = 'ZEN_STACK_3D_SAVE_V1';
+        this.KEY = 'ZEN_STACK_3D_SAVE_V2';
     }
 
     getDefaults() {
         return {
             highScore: 0,
-            coins: 0,
+            coins: 100,
             selectedSkin: 'classic',
             unlockedSkins: ['classic']
         };

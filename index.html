@@ -3,27 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Zen Stack 3D — Minimalist ASMR Stacker</title>
+    <title>Zen Stack 3D — ASMR Precision Stacker</title>
+    <!-- Fonts & CSS -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <!-- Three.js CDN -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
 <body>
     <div id="game-container">
-        <!-- HUD Score Displays -->
+        <!-- HUD Header -->
         <div class="hud-header">
             <div class="score-display" id="score-val">0</div>
-            <div class="high-score-badge">BEST: <span id="high-score-val">0</span></div>
+            <div class="hud-top-bar">
+                <div class="stat-badge">BEST: <span id="high-score-val">0</span></div>
+                <div class="stat-badge coins-badge">🪙 <span id="coins-val">0</span></div>
+            </div>
         </div>
 
         <!-- Combo Feedback Badge -->
         <div class="combo-badge" id="combo-badge">PERFECT! x1</div>
 
-        <!-- Tap Hint -->
-        <div class="tap-instruction">TAP SCREEN OR PRESS SPACE TO PLACE BLOCK</div>
+        <!-- Textless Onboarding Pointer Hand Overlay -->
+        <div class="onboarding-overlay" id="onboarding-overlay">
+            <div class="hand-icon">👆</div>
+        </div>
 
         <!-- Game Over Modal -->
         <div class="modal-overlay" id="game-over-modal">

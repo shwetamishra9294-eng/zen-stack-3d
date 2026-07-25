@@ -1,0 +1,29 @@
+{
+  "name": "zen-stack-3d",
+  "version": "1.0.0",
+  "description": "Zen Stack 3D — Minimalist ASMR Precision Stacker Game",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx serve .",
+    "cap:add": "npx cap add android",
+    "cap:sync": "npx cap sync android",
+    "cap:open": "npx cap open android"
+  },
+  "dependencies": {
+    "@capacitor/android": "^5.7.0",
+    "@capacitor/core": "^5.7.0"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^5.7.0"
+  },
+  "keywords": [
+    "game",
+    "3d",
+    "stacking",
+    "asmr",
+    "android",
+    "capacitor"
+  ],
+  "author": "Shweta Mishra",
+  "license": "MIT"
+}

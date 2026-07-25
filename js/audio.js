@@ -1,4 +1,4 @@
-// Zen Stack 3D - ASMR Musical Scale Audio Synthesizer (Web Audio API)
+// Zen Stack 3D - ASMR Synthesizer & Haptics Engine (Web Audio API)
 class AudioEngine {
     constructor() {
         this.ctx = null;
@@ -19,9 +19,16 @@ class AudioEngine {
         }
     }
 
+    triggerHaptic(ms = 25) {
+        if (navigator.vibrate) {
+            try { navigator.vibrate(ms); } catch (e) {}
+        }
+    }
+
     playNote(comboIndex = 0) {
         if (this.muted) return;
         this.init();
+        this.triggerHaptic(20);
 
         const noteIndex = comboIndex % this.scale.length;
         const freq = this.scale[noteIndex];
@@ -34,7 +41,7 @@ class AudioEngine {
         osc.type = 'sine';
         osc.frequency.setValueAtTime(freq, now);
 
-        gain.gain.setValueAtTime(0.3, now);
+        gain.gain.setValueAtTime(0.35, now);
         gain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
 
         osc.connect(gain);
@@ -47,16 +54,17 @@ class AudioEngine {
     playSlice() {
         if (this.muted) return;
         this.init();
+        this.triggerHaptic(40);
 
         const now = this.ctx.currentTime;
         const osc = this.ctx.createOscillator();
         const gain = this.ctx.createGain();
 
         osc.type = 'triangle';
-        osc.frequency.setValueAtTime(220, now);
+        osc.frequency.setValueAtTime(240, now);
         osc.frequency.exponentialRampToValueAtTime(110, now + 0.12);
 
-        gain.gain.setValueAtTime(0.2, now);
+        gain.gain.setValueAtTime(0.25, now);
         gain.gain.linearRampToValueAtTime(0.01, now + 0.12);
 
         osc.connect(gain);
@@ -66,19 +74,44 @@ class AudioEngine {
         osc.stop(now + 0.12);
     }
 
+    playFeverChime() {
+        if (this.muted) return;
+        this.init();
+        this.triggerHaptic([30, 50, 30]);
+
+        const now = this.ctx.currentTime;
+        const freqs = [523.25, 659.25, 783.99, 1046.50, 1318.51];
+        freqs.forEach((f, idx) => {
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(f, now + idx * 0.04);
+
+            gain.gain.setValueAtTime(0.3, now + idx * 0.04);
+            gain.gain.linearRampToValueAtTime(0.001, now + idx * 0.04 + 0.25);
+
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+
+            osc.start(now + idx * 0.04);
+            osc.stop(now + idx * 0.04 + 0.25);
+        });
+    }
+
     playGameOver() {
         if (this.muted) return;
         this.init();
+        this.triggerHaptic(100);
 
         const now = this.ctx.currentTime;
-        const freqs = [300, 260, 220, 180];
+        const freqs = [320, 260, 200, 150];
         freqs.forEach((f, idx) => {
             const osc = this.ctx.createOscillator();
             const gain = this.ctx.createGain();
             osc.type = 'sawtooth';
             osc.frequency.setValueAtTime(f, now + idx * 0.08);
 
-            gain.gain.setValueAtTime(0.15, now + idx * 0.08);
+            gain.gain.setValueAtTime(0.2, now + idx * 0.08);
             gain.gain.linearRampToValueAtTime(0.001, now + (idx + 1) * 0.08 + 0.1);
 
             osc.connect(gain);
@@ -89,27 +122,9 @@ class AudioEngine {
         });
     }
 
-    playComboBonus() {
-        if (this.muted) return;
-        this.init();
-
-        const now = this.ctx.currentTime;
-        const freqs = [523.25, 659.25, 783.99, 1046.50];
-        freqs.forEach((f, idx) => {
-            const osc = this.ctx.createOscillator();
-            const gain = this.ctx.createGain();
-            osc.type = 'sine';
-            osc.frequency.setValueAtTime(f, now + idx * 0.04);
-
-            gain.gain.setValueAtTime(0.25, now + idx * 0.04);
-            gain.gain.linearRampToValueAtTime(0.001, now + idx * 0.04 + 0.2);
-
-            osc.connect(gain);
-            gain.connect(this.ctx.destination);
-
-            osc.start(now + idx * 0.04);
-            osc.stop(now + idx * 0.04 + 0.2);
-        });
+    toggleMute() {
+        this.muted = !this.muted;
+        return this.muted;
     }
 }
 

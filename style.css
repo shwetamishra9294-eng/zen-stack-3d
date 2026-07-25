@@ -11,7 +11,7 @@ body, html {
     width: 100%;
     height: 100%;
     overflow: hidden;
-    background-color: #0d0e15;
+    background-color: #0c0d14;
     color: #ffffff;
 }
 
@@ -30,7 +30,7 @@ canvas {
 /* Header HUD */
 .hud-header {
     position: absolute;
-    top: 25px;
+    top: 20px;
     left: 50%;
     transform: translateX(-50%);
     display: flex;
@@ -42,35 +42,53 @@ canvas {
 }
 
 .score-display {
-    font-size: 64px;
+    font-size: 68px;
     font-weight: 900;
     color: #ffffff;
-    text-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    text-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
     letter-spacing: -1px;
+    transition: transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-.high-score-badge {
+.score-display.bounce {
+    transform: scale(1.25);
+}
+
+.hud-top-bar {
+    display: flex;
+    gap: 10px;
+}
+
+.stat-badge {
     background: rgba(255, 255, 255, 0.12);
-    backdrop-filter: blur(10px);
+    backdrop-filter: blur(12px);
     border: 1px solid rgba(255, 255, 255, 0.2);
     padding: 6px 16px;
     border-radius: 20px;
     font-size: 14px;
-    font-weight: 700;
-    color: #e2e8f0;
+    font-weight: 800;
+    color: #f8fafc;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    display: flex;
+    align-items: center;
+    gap: 6px;
 }
 
-/* Combo Popup Badge */
+.coins-badge {
+    color: #fbbf24;
+    border-color: rgba(251, 191, 36, 0.35);
+}
+
+/* Combo & Fever Badges */
 .combo-badge {
     position: absolute;
-    top: 135px;
+    top: 140px;
     left: 50%;
     transform: translateX(-50%) scale(0.5);
     background: linear-gradient(135deg, #f59e0b, #ef4444);
     color: white;
-    padding: 8px 20px;
-    border-radius: 25px;
+    padding: 8px 22px;
+    border-radius: 30px;
     font-size: 18px;
     font-weight: 900;
     box-shadow: 0 6px 20px rgba(245, 158, 11, 0.5);
@@ -82,40 +100,49 @@ canvas {
 
 .combo-badge.active {
     opacity: 1;
-    transform: translateX(-50%) scale(1.1);
+    transform: translateX(-50%) scale(1.15);
 }
 
-/* Tap Hint */
-.tap-instruction {
+.fever-badge {
+    background: linear-gradient(135deg, #ec4899, #8b5cf6, #3b82f6) !important;
+    animation: feverGlow 1s infinite alternate;
+}
+
+@keyframes feverGlow {
+    0% { box-shadow: 0 6px 20px rgba(236, 72, 153, 0.6); }
+    100% { box-shadow: 0 10px 30px rgba(59, 130, 246, 0.9); }
+}
+
+/* Textless Onboarding Pointer Hand Overlay */
+.onboarding-overlay {
     position: absolute;
-    bottom: 80px;
+    bottom: 120px;
     left: 50%;
     transform: translateX(-50%);
-    background: rgba(15, 23, 42, 0.6);
-    backdrop-filter: blur(8px);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    padding: 10px 24px;
-    border-radius: 30px;
-    font-size: 14px;
-    font-weight: 700;
-    color: #cbd5e1;
-    letter-spacing: 0.5px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     pointer-events: none;
-    z-index: 10;
-    animation: pulse 1.8s infinite;
+    z-index: 20;
+    transition: opacity 0.4s ease;
 }
 
-@keyframes pulse {
-    0%, 100% { opacity: 0.8; transform: translateX(-50%) scale(1); }
-    50% { opacity: 1; transform: translateX(-50%) scale(1.05); }
+.hand-icon {
+    font-size: 48px;
+    animation: tapTap 1.2s infinite ease-in-out;
 }
 
-/* Modal Overlay */
+@keyframes tapTap {
+    0%, 100% { transform: translateY(0) scale(1); }
+    50% { transform: translateY(-16px) scale(0.9); }
+}
+
+/* Modals Overlay */
 .modal-overlay {
     position: absolute;
     inset: 0;
-    background: rgba(10, 12, 18, 0.82);
-    backdrop-filter: blur(12px);
+    background: rgba(10, 12, 18, 0.84);
+    backdrop-filter: blur(14px);
     z-index: 50;
     display: none;
     justify-content: center;
@@ -131,10 +158,10 @@ canvas {
 .modal-card {
     background: linear-gradient(145deg, #1e293b, #0f172a);
     border: 1px solid rgba(255, 255, 255, 0.15);
-    border-radius: 28px;
+    border-radius: 30px;
     padding: 36px 30px;
     width: 90%;
-    max-width: 380px;
+    max-width: 390px;
     text-align: center;
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
 }
@@ -161,7 +188,7 @@ canvas {
 }
 
 .modal-final-score {
-    font-size: 48px;
+    font-size: 52px;
     font-weight: 900;
     color: #ffffff;
 }

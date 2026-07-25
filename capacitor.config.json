@@ -1,0 +1,15 @@
+{
+  "appId": "com.shwetamishra.zenstack3d",
+  "appName": "Zen Stack 3D",
+  "webDir": ".",
+  "bundledWebRuntime": false,
+  "server": {
+    "androidScheme": "https"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 1500,
+      "backgroundColor": "#0c0d14"
+    }
+  }
+}
