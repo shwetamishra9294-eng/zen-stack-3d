@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Zen Stack 3D — Minimalist ASMR Stacker</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <!-- Three.js CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+    <div id="game-container">
+        <!-- HUD Score Displays -->
+        <div class="hud-header">
+            <div class="score-display" id="score-val">0</div>
+            <div class="high-score-badge">BEST: <span id="high-score-val">0</span></div>
+        </div>
+
+        <!-- Combo Feedback Badge -->
+        <div class="combo-badge" id="combo-badge">PERFECT! x1</div>
+
+        <!-- Tap Hint -->
+        <div class="tap-instruction">TAP SCREEN OR PRESS SPACE TO PLACE BLOCK</div>
+
+        <!-- Game Over Modal -->
+        <div class="modal-overlay" id="game-over-modal">
+            <div class="modal-card">
+                <h2>GREAT STACK! 🏰</h2>
+                <p>You reached a new height!</p>
+
+                <div class="modal-score-box">
+                    <div class="modal-final-score" id="modal-score-val">42</div>
+                    <div class="modal-high-score-label" id="modal-high-score-val">BEST: 42</div>
+                </div>
+
+                <div class="btn-group">
+                    <button class="modal-btn btn-ad" id="btn-ad-revive">🎬 Revive & Save Tower (Ad)</button>
+                    <button class="modal-btn" id="btn-restart">🔄 Play Again</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Application Game Scripts -->
+    <script src="js/audio.js"></script>
+    <script src="js/storage.js"></script>
+    <script src="js/game.js"></script>
+</body>
+</html>
