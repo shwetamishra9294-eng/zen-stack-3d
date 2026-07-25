@@ -1,4 +1,4 @@
-// Zen Stack 3D - Fixed Clean Restart & Camera Reset Engine
+// Zen Stack 3D - Fixed 3D Scene Purge & Stack Placement Architecture
 
 class ZenStackGame {
     constructor() {
@@ -111,16 +111,15 @@ class ZenStackGame {
     }
 
     initBase() {
-        // Base Foundation Mesh
         const baseGeom = new THREE.BoxGeometry(this.boxSize.x, 3.0, this.boxSize.z);
         const baseMat = this.getSkinMaterial(this.hue);
-        const baseMesh = new THREE.Mesh(baseGeom, baseMat);
-        baseMesh.position.set(0, -1.5, 0);
-        baseMesh.receiveShadow = true;
-        this.scene.add(baseMesh);
+        this.baseMesh = new THREE.Mesh(baseGeom, baseMat);
+        this.baseMesh.position.set(0, -1.5, 0);
+        this.baseMesh.receiveShadow = true;
+        this.scene.add(this.baseMesh);
 
         this.stack = [{
-            mesh: baseMesh,
+            mesh: this.baseMesh,
             position: { x: 0, z: 0 },
             size: { x: this.boxSize.x, z: this.boxSize.z }
         }];
@@ -243,7 +242,7 @@ class ZenStackGame {
                 this.showComboBadge(`PERFECT! x${this.combo}`);
             }
 
-            this.finalizeBlockPlacement(active.mesh.position.x, active.mesh.position.z);
+            this.finalizeBlockPlacement(active.mesh, active.mesh.position.x, active.mesh.position.z);
             return;
         }
 
@@ -297,12 +296,13 @@ class ZenStackGame {
         });
 
         this.boxSize[axis] = overlap;
-        this.finalizeBlockPlacement(newPos.x, newPos.z);
+        // Fix: Store cutMesh in stack instead of old active.mesh!
+        this.finalizeBlockPlacement(cutMesh, newPos.x, newPos.z);
     }
 
-    finalizeBlockPlacement(posX, posZ) {
+    finalizeBlockPlacement(mesh, posX, posZ) {
         this.stack.push({
-            mesh: this.activeBlock.mesh,
+            mesh: mesh,
             position: { x: posX, z: posZ },
             size: { x: this.boxSize.x, z: this.boxSize.z }
         });
@@ -367,28 +367,30 @@ class ZenStackGame {
         document.getElementById('score-val').innerText = '0';
         document.getElementById('game-over-modal').style.display = 'none';
 
-        // 1. Remove active moving block if present
-        if (this.activeBlock && this.activeBlock.mesh) {
-            this.scene.remove(this.activeBlock.mesh);
-            this.activeBlock = null;
-        }
-
-        // 2. Thoroughly remove all previous stack meshes except base
-        for (let i = 1; i < this.stack.length; i++) {
-            if (this.stack[i] && this.stack[i].mesh) {
-                this.scene.remove(this.stack[i].mesh);
+        // Fix: Purge ALL 3D meshes from scene except the foundation baseMesh
+        const toRemove = [];
+        this.scene.traverse((child) => {
+            if (child.isMesh && child !== this.baseMesh) {
+                toRemove.push(child);
             }
-        }
-        this.stack = [this.stack[0]];
+        });
+        toRemove.forEach(mesh => {
+            this.scene.remove(mesh);
+            if (mesh.geometry) mesh.geometry.dispose();
+        });
 
-        // 3. Clear debris & particles
-        this.debris.forEach(d => { if (d.mesh) this.scene.remove(d.mesh); });
+        // Reset stack to base foundation mesh only
+        this.stack = [{
+            mesh: this.baseMesh,
+            position: { x: 0, z: 0 },
+            size: { x: 3.2, z: 3.2 }
+        }];
+
+        this.activeBlock = null;
         this.debris = [];
-
-        this.particles.forEach(p => { if (p.mesh) this.scene.remove(p.mesh); });
         this.particles = [];
 
-        // 4. INSTANT CAMERA RE-CENTERING TO BASE
+        // Reset camera position & target directly to base
         this.cameraBasePos.set(12, 14, 12);
         this.camera.position.copy(this.cameraBasePos);
         this.camera.lookAt(0, 2, 0);
@@ -431,14 +433,22 @@ class ZenStackGame {
             if (e.code === 'Space') this.placeBlock();
         });
 
-        document.getElementById('btn-restart').addEventListener('click', () => this.startGame());
-        document.getElementById('btn-ad-revive').addEventListener('click', () => this.reviveGame());
+        document.getElementById('btn-restart').addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.startGame();
+        });
+        document.getElementById('btn-ad-revive').addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.reviveGame();
+        });
 
-        document.getElementById('btn-open-shop').addEventListener('click', () => {
+        document.getElementById('btn-open-shop').addEventListener('click', (e) => {
+            e.stopPropagation();
             this.renderSkinShop();
             document.getElementById('shop-modal').style.display = 'flex';
         });
-        document.getElementById('btn-close-shop').addEventListener('click', () => {
+        document.getElementById('btn-close-shop').addEventListener('click', (e) => {
+            e.stopPropagation();
             document.getElementById('shop-modal').style.display = 'none';
         });
 
@@ -479,7 +489,8 @@ class ZenStackGame {
                 </button>
             `;
 
-            card.addEventListener('click', () => {
+            card.addEventListener('click', (e) => {
+                e.stopPropagation();
                 if (isSelected) return;
 
                 if (isUnlocked) {
