@@ -19,7 +19,8 @@
             <div class="score-display" id="score-val">0</div>
             <div class="hud-top-bar">
                 <div class="stat-badge">BEST: <span id="high-score-val">0</span></div>
-                <div class="stat-badge coins-badge">🪙 <span id="coins-val">0</span></div>
+                <div class="stat-badge coins-badge" id="btn-open-shop">🪙 <span id="coins-val">200</span> (Shop)</div>
+                <div class="stat-badge landmark-badge" id="landmark-badge">🏢 Skyscraper</div>
             </div>
         </div>
 
@@ -29,6 +30,19 @@
         <!-- Textless Onboarding Pointer Hand Overlay -->
         <div class="onboarding-overlay" id="onboarding-overlay">
             <div class="hand-icon">👆</div>
+        </div>
+
+        <!-- Skin Shop Modal -->
+        <div class="modal-overlay" id="shop-modal">
+            <div class="modal-card">
+                <button class="close-btn" id="btn-close-shop">✕</button>
+                <h2>SKIN SHOP 🎨</h2>
+                <p>Unlock themes using Architect Coins</p>
+
+                <div class="skin-grid" id="skin-grid">
+                    <!-- Dynamic skin items rendered via JS -->
+                </div>
+            </div>
         </div>
 
         <!-- Game Over Modal -->

@@ -57,6 +57,7 @@ canvas {
 .hud-top-bar {
     display: flex;
     gap: 10px;
+    pointer-events: auto;
 }
 
 .stat-badge {
@@ -72,11 +73,23 @@ canvas {
     display: flex;
     align-items: center;
     gap: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.stat-badge:hover {
+    transform: translateY(-2px);
+    background: rgba(255, 255, 255, 0.2);
 }
 
 .coins-badge {
     color: #fbbf24;
-    border-color: rgba(251, 191, 36, 0.35);
+    border-color: rgba(251, 191, 36, 0.4);
+}
+
+.landmark-badge {
+    color: #38bdf8;
+    border-color: rgba(56, 189, 248, 0.4);
 }
 
 /* Combo & Fever Badges */
@@ -161,9 +174,10 @@ canvas {
     border-radius: 30px;
     padding: 36px 30px;
     width: 90%;
-    max-width: 390px;
+    max-width: 420px;
     text-align: center;
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+    position: relative;
 }
 
 .modal-card h2 {
@@ -232,4 +246,87 @@ canvas {
 
 .btn-ad:hover {
     box-shadow: 0 6px 20px rgba(16, 185, 129, 0.6);
+}
+
+/* Skin Shop Grid */
+.skin-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+    margin-bottom: 22px;
+}
+
+.skin-card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    padding: 16px 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.skin-card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(59, 130, 246, 0.6);
+}
+
+.skin-card.selected {
+    border-color: #3b82f6;
+    background: rgba(59, 130, 246, 0.15);
+}
+
+.skin-preview {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+.skin-title {
+    font-size: 13px;
+    font-weight: 800;
+    color: #f8fafc;
+}
+
+.skin-btn {
+    padding: 6px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 800;
+    border: none;
+    cursor: pointer;
+    width: 100%;
+}
+
+.btn-equip {
+    background: #3b82f6;
+    color: white;
+}
+
+.btn-buy {
+    background: #fbbf24;
+    color: #000000;
+}
+
+.btn-equipped {
+    background: #10b981;
+    color: white;
+}
+
+.close-btn {
+    position: absolute;
+    top: 18px;
+    right: 20px;
+    background: rgba(255,255,255,0.08);
+    border: none;
+    color: #94a3b8;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    font-weight: bold;
+    cursor: pointer;
 }

@@ -1,11 +1,15 @@
-// Zen Stack 3D - High-Performance 3D Engine with Particle Sparkles, Screen Shake & Fever Mode
+// Zen Stack 3D - Complete Short, Medium & Long-Term Meta Engine
 
 class ZenStackGame {
     constructor() {
         this.saveData = window.storageManager.load();
         this.score = 0;
         this.highScore = this.saveData.highScore || 0;
-        this.coins = this.saveData.coins || 0;
+        this.coins = this.saveData.coins || 200;
+        this.selectedSkin = this.saveData.selectedSkin || 'classic';
+        this.unlockedSkins = this.saveData.unlockedSkins || ['classic'];
+        this.unlockedLandmarks = this.saveData.unlockedLandmarks || ['skyscraper'];
+
         this.combo = 0;
         this.feverActive = false;
         this.isPlaying = false;
@@ -53,7 +57,6 @@ class ZenStackGame {
         this.dirLight.shadow.mapSize.height = 1024;
         this.scene.add(this.dirLight);
 
-        // Camera Shake State
         this.shakeIntensity = 0;
 
         this.initBase();
@@ -65,17 +68,51 @@ class ZenStackGame {
     }
 
     updateBackgroundHue(h) {
+        if (this.selectedSkin === 'cyberpunk') {
+            const topColor = new THREE.Color(0x050b14);
+            this.scene.background = topColor;
+            this.scene.fog = new THREE.Fog(topColor, 16, 45);
+            return;
+        }
+
         const topColor = new THREE.Color(`hsl(${h}, 50%, 14%)`);
         this.scene.background = topColor;
         this.scene.fog = new THREE.Fog(topColor, 16, 45);
     }
 
+    getSkinMaterial(blockHue) {
+        if (this.selectedSkin === 'cyberpunk') {
+            return new THREE.MeshStandardMaterial({
+                color: new THREE.Color(`hsl(${(blockHue + 180) % 360}, 100%, 50%)`),
+                roughness: 0.1,
+                metalness: 0.8,
+                emissive: new THREE.Color(`hsl(${(blockHue + 180) % 360}, 100%, 20%)`)
+            });
+        } else if (this.selectedSkin === 'bamboo') {
+            return new THREE.MeshStandardMaterial({
+                color: new THREE.Color(0x15803d),
+                roughness: 0.7,
+                metalness: 0.0
+            });
+        } else if (this.selectedSkin === 'gold') {
+            return new THREE.MeshStandardMaterial({
+                color: new THREE.Color(0xfbbf24),
+                roughness: 0.2,
+                metalness: 0.9
+            });
+        } else {
+            // Classic Gradient
+            return new THREE.MeshStandardMaterial({
+                color: new THREE.Color(`hsl(${blockHue}, 80%, 58%)`),
+                roughness: 0.25,
+                metalness: 0.1
+            });
+        }
+    }
+
     initBase() {
         const baseGeom = new THREE.BoxGeometry(this.boxSize.x, 3.0, this.boxSize.z);
-        const baseMat = new THREE.MeshStandardMaterial({
-            color: new THREE.Color(`hsl(${this.hue}, 70%, 50%)`),
-            roughness: 0.3
-        });
+        const baseMat = this.getSkinMaterial(this.hue);
         const baseMesh = new THREE.Mesh(baseGeom, baseMat);
         baseMesh.position.set(0, -1.5, 0);
         baseMesh.receiveShadow = true;
@@ -89,6 +126,16 @@ class ZenStackGame {
 
         document.getElementById('high-score-val').innerText = this.highScore;
         document.getElementById('coins-val').innerText = this.coins;
+        this.updateLandmarkBadge();
+    }
+
+    updateLandmarkBadge() {
+        let name = '🏢 Skyscraper';
+        if (this.score >= 100) name = '🏰 Fantasy Castle';
+        else if (this.score >= 75) name = '🚀 Space Elevator';
+        else if (this.score >= 50) name = '⛩️ Zen Pagoda';
+
+        document.getElementById('landmark-badge').innerText = name;
     }
 
     spawnNextBlock() {
@@ -98,11 +145,7 @@ class ZenStackGame {
 
         const geom = new THREE.BoxGeometry(this.boxSize.x, this.boxHeight, this.boxSize.z);
         const blockHue = (this.hue + (this.stack.length * 6)) % 360;
-        const mat = new THREE.MeshStandardMaterial({
-            color: new THREE.Color(`hsl(${blockHue}, 80%, 58%)`),
-            roughness: 0.25,
-            metalness: 0.1
-        });
+        const mat = this.getSkinMaterial(blockHue);
 
         const mesh = new THREE.Mesh(geom, mat);
         mesh.castShadow = true;
@@ -153,7 +196,6 @@ class ZenStackGame {
     }
 
     placeBlock() {
-        // Hide textless onboarding hand icon on first player action
         if (!this.firstTapDone) {
             this.firstTapDone = true;
             document.getElementById('onboarding-overlay').style.opacity = '0';
@@ -180,10 +222,8 @@ class ZenStackGame {
             this.combo++;
             this.triggerScreenShake();
 
-            // Particle sparkles at block position
             this.triggerParticleExplosion(active.mesh.position, 0xfbbf24);
 
-            // Combo recovery mechanics
             if (this.combo >= 5) {
                 this.feverActive = true;
                 window.soundEngine.playFeverChime();
@@ -210,7 +250,7 @@ class ZenStackGame {
             return;
         }
 
-        // 3. SLICE BLOCK (Part Overlaps, Part Drops)
+        // 3. SLICE BLOCK
         this.combo = 0;
         this.feverActive = false;
         this.hideComboBadge();
@@ -274,8 +314,8 @@ class ZenStackGame {
         setTimeout(() => scoreEl.classList.remove('bounce'), 150);
 
         document.getElementById('coins-val').innerText = this.coins;
+        this.updateLandmarkBadge();
 
-        // Dynamic Hue Transition
         const currentHue = (this.hue + (this.score * 5)) % 360;
         this.updateBackgroundHue(currentHue);
 
@@ -302,7 +342,10 @@ class ZenStackGame {
 
         window.storageManager.save({
             highScore: this.highScore,
-            coins: this.coins
+            coins: this.coins,
+            selectedSkin: this.selectedSkin,
+            unlockedSkins: this.unlockedSkins,
+            unlockedLandmarks: this.unlockedLandmarks
         });
 
         document.getElementById('modal-score-val').innerText = this.score;
@@ -372,6 +415,15 @@ class ZenStackGame {
         document.getElementById('btn-restart').addEventListener('click', () => this.startGame());
         document.getElementById('btn-ad-revive').addEventListener('click', () => this.reviveGame());
 
+        // Skin Shop Trigger & Modal Events
+        document.getElementById('btn-open-shop').addEventListener('click', () => {
+            this.renderSkinShop();
+            document.getElementById('shop-modal').style.display = 'flex';
+        });
+        document.getElementById('btn-close-shop').addEventListener('click', () => {
+            document.getElementById('shop-modal').style.display = 'none';
+        });
+
         window.addEventListener('resize', () => {
             const aspect = window.innerWidth / window.innerHeight;
             const d = 7;
@@ -384,11 +436,69 @@ class ZenStackGame {
         });
     }
 
+    renderSkinShop() {
+        const container = document.getElementById('skin-grid');
+        container.innerHTML = '';
+
+        const skins = [
+            { id: 'classic', title: 'Classic Gradient', price: 0, color: 'linear-gradient(135deg, #3b82f6, #8b5cf6)' },
+            { id: 'cyberpunk', title: 'Cyberpunk Neon', price: 150, color: 'linear-gradient(135deg, #06b6d4, #ec4899)' },
+            { id: 'bamboo', title: 'Zen Bamboo', price: 300, color: 'linear-gradient(135deg, #15803d, #86efac)' },
+            { id: 'gold', title: 'Gold Foil VIP', price: 500, color: 'linear-gradient(135deg, #fbbf24, #d97706)' }
+        ];
+
+        skins.forEach(skin => {
+            const card = document.createElement('div');
+            const isUnlocked = this.unlockedSkins.includes(skin.id);
+            const isSelected = this.selectedSkin === skin.id;
+
+            card.className = `skin-card ${isSelected ? 'selected' : ''}`;
+            card.innerHTML = `
+                <div class="skin-preview" style="background: ${skin.color}"></div>
+                <div class="skin-title">${skin.title}</div>
+                <button class="skin-btn ${isSelected ? 'btn-equipped' : (isUnlocked ? 'btn-equip' : 'btn-buy')}">
+                    ${isSelected ? 'EQUIPPED' : (isUnlocked ? 'EQUIP' : `🪙 ${skin.price}`)}
+                </button>
+            `;
+
+            card.addEventListener('click', () => {
+                if (isSelected) return;
+
+                if (isUnlocked) {
+                    this.selectedSkin = skin.id;
+                    window.storageManager.save({
+                        highScore: this.highScore,
+                        coins: this.coins,
+                        selectedSkin: this.selectedSkin,
+                        unlockedSkins: this.unlockedSkins,
+                        unlockedLandmarks: this.unlockedLandmarks
+                    });
+                    this.renderSkinShop();
+                } else if (this.coins >= skin.price) {
+                    this.coins -= skin.price;
+                    this.unlockedSkins.push(skin.id);
+                    this.selectedSkin = skin.id;
+                    document.getElementById('coins-val').innerText = this.coins;
+
+                    window.storageManager.save({
+                        highScore: this.highScore,
+                        coins: this.coins,
+                        selectedSkin: this.selectedSkin,
+                        unlockedSkins: this.unlockedSkins,
+                        unlockedLandmarks: this.unlockedLandmarks
+                    });
+                    this.renderSkinShop();
+                }
+            });
+
+            container.appendChild(card);
+        });
+    }
+
     animate() {
         requestAnimationFrame(this.animate);
         const delta = this.clock.getDelta();
 
-        // 1. Moving Active Block
         if (this.isPlaying && this.activeBlock) {
             const axis = this.activeBlock.axis;
             const speedScale = 2.2 + Math.min(2.5, this.score * 0.04);
@@ -396,7 +506,6 @@ class ZenStackGame {
             this.activeBlock.mesh.position[axis] = Math.sin(time) * 4.8;
         }
 
-        // 2. Animate Particles
         for (let i = this.particles.length - 1; i >= 0; i--) {
             const p = this.particles[i];
             p.mesh.position.add(p.vel);
@@ -409,7 +518,6 @@ class ZenStackGame {
             }
         }
 
-        // 3. Animate Debris
         for (let i = this.debris.length - 1; i >= 0; i--) {
             const d = this.debris[i];
             d.mesh.position.y -= d.fallSpeed;
@@ -422,7 +530,6 @@ class ZenStackGame {
             }
         }
 
-        // 4. Camera Ascent & Screen Shake
         const targetY = (this.stack.length * this.boxHeight) + 6;
         this.cameraBasePos.y = THREE.MathUtils.lerp(this.cameraBasePos.y, targetY + 8, 0.06);
 
