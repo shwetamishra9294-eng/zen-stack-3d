@@ -1,4 +1,4 @@
-// Zen Stack 3D - Complete Short, Medium & Long-Term Meta Engine
+// Zen Stack 3D - Fixed Clean Restart & Camera Reset Engine
 
 class ZenStackGame {
     constructor() {
@@ -20,6 +20,7 @@ class ZenStackGame {
         this.stack = [];
         this.debris = [];
         this.particles = [];
+        this.activeBlock = null;
         this.currentAxis = 'x';
         this.boxHeight = 0.6;
         this.boxSize = { x: 3.2, z: 3.2 };
@@ -101,7 +102,6 @@ class ZenStackGame {
                 metalness: 0.9
             });
         } else {
-            // Classic Gradient
             return new THREE.MeshStandardMaterial({
                 color: new THREE.Color(`hsl(${blockHue}, 80%, 58%)`),
                 roughness: 0.25,
@@ -111,6 +111,7 @@ class ZenStackGame {
     }
 
     initBase() {
+        // Base Foundation Mesh
         const baseGeom = new THREE.BoxGeometry(this.boxSize.x, 3.0, this.boxSize.z);
         const baseMat = this.getSkinMaterial(this.hue);
         const baseMesh = new THREE.Mesh(baseGeom, baseMat);
@@ -118,11 +119,11 @@ class ZenStackGame {
         baseMesh.receiveShadow = true;
         this.scene.add(baseMesh);
 
-        this.stack.push({
+        this.stack = [{
             mesh: baseMesh,
             position: { x: 0, z: 0 },
             size: { x: this.boxSize.x, z: this.boxSize.z }
-        });
+        }];
 
         document.getElementById('high-score-val').innerText = this.highScore;
         document.getElementById('coins-val').innerText = this.coins;
@@ -139,6 +140,8 @@ class ZenStackGame {
     }
 
     spawnNextBlock() {
+        if (!this.stack || this.stack.length === 0) return;
+
         const prev = this.stack[this.stack.length - 1];
         const y = this.stack.length * this.boxHeight;
         this.currentAxis = (this.stack.length % 2 === 1) ? 'x' : 'z';
@@ -364,17 +367,33 @@ class ZenStackGame {
         document.getElementById('score-val').innerText = '0';
         document.getElementById('game-over-modal').style.display = 'none';
 
+        // 1. Remove active moving block if present
+        if (this.activeBlock && this.activeBlock.mesh) {
+            this.scene.remove(this.activeBlock.mesh);
+            this.activeBlock = null;
+        }
+
+        // 2. Thoroughly remove all previous stack meshes except base
         for (let i = 1; i < this.stack.length; i++) {
-            this.scene.remove(this.stack[i].mesh);
+            if (this.stack[i] && this.stack[i].mesh) {
+                this.scene.remove(this.stack[i].mesh);
+            }
         }
         this.stack = [this.stack[0]];
 
-        this.debris.forEach(d => this.scene.remove(d.mesh));
+        // 3. Clear debris & particles
+        this.debris.forEach(d => { if (d.mesh) this.scene.remove(d.mesh); });
         this.debris = [];
 
-        this.particles.forEach(p => this.scene.remove(p.mesh));
+        this.particles.forEach(p => { if (p.mesh) this.scene.remove(p.mesh); });
         this.particles = [];
 
+        // 4. INSTANT CAMERA RE-CENTERING TO BASE
+        this.cameraBasePos.set(12, 14, 12);
+        this.camera.position.copy(this.cameraBasePos);
+        this.camera.lookAt(0, 2, 0);
+
+        this.updateBackgroundHue(this.hue);
         this.spawnNextBlock();
     }
 
@@ -382,7 +401,7 @@ class ZenStackGame {
         document.getElementById('game-over-modal').style.display = 'none';
         this.isGameOver = false;
         this.isPlaying = true;
-        this.boxSize = { x: Math.max(1.8, this.boxSize.x), z: Math.max(1.8, this.boxSize.z) };
+        this.boxSize = { x: Math.max(2.0, this.boxSize.x), z: Math.max(2.0, this.boxSize.z) };
         this.spawnNextBlock();
     }
 
@@ -415,7 +434,6 @@ class ZenStackGame {
         document.getElementById('btn-restart').addEventListener('click', () => this.startGame());
         document.getElementById('btn-ad-revive').addEventListener('click', () => this.reviveGame());
 
-        // Skin Shop Trigger & Modal Events
         document.getElementById('btn-open-shop').addEventListener('click', () => {
             this.renderSkinShop();
             document.getElementById('shop-modal').style.display = 'flex';
@@ -530,20 +548,23 @@ class ZenStackGame {
             }
         }
 
-        const targetY = (this.stack.length * this.boxHeight) + 6;
-        this.cameraBasePos.y = THREE.MathUtils.lerp(this.cameraBasePos.y, targetY + 8, 0.06);
+        if (this.isPlaying) {
+            const targetY = (this.stack.length * this.boxHeight) + 6;
+            this.cameraBasePos.y = THREE.MathUtils.lerp(this.cameraBasePos.y, targetY + 8, 0.06);
 
-        if (this.shakeIntensity > 0) {
-            this.camera.position.x = this.cameraBasePos.x + (Math.random() - 0.5) * this.shakeIntensity;
-            this.camera.position.y = this.cameraBasePos.y + (Math.random() - 0.5) * this.shakeIntensity;
-            this.camera.position.z = this.cameraBasePos.z + (Math.random() - 0.5) * this.shakeIntensity;
-            this.shakeIntensity *= 0.85;
-            if (this.shakeIntensity < 0.01) this.shakeIntensity = 0;
-        } else {
-            this.camera.position.copy(this.cameraBasePos);
+            if (this.shakeIntensity > 0) {
+                this.camera.position.x = this.cameraBasePos.x + (Math.random() - 0.5) * this.shakeIntensity;
+                this.camera.position.y = this.cameraBasePos.y + (Math.random() - 0.5) * this.shakeIntensity;
+                this.camera.position.z = this.cameraBasePos.z + (Math.random() - 0.5) * this.shakeIntensity;
+                this.shakeIntensity *= 0.85;
+                if (this.shakeIntensity < 0.01) this.shakeIntensity = 0;
+            } else {
+                this.camera.position.copy(this.cameraBasePos);
+            }
+
+            this.camera.lookAt(0, targetY - 4, 0);
         }
 
-        this.camera.lookAt(0, targetY - 4, 0);
         this.renderer.render(this.scene, this.camera);
     }
 }
