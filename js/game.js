@@ -1,4 +1,4 @@
-// Zen Stack 3D - High-Effort 3D Character Rig Engine with Limb Joints, Sneakers, Jetpack & Backflips
+// Zen Stack 3D - Ultra-Refined Minimalist ASMR Glassmorphic Stacker Engine
 
 class ZenStackGame {
     constructor() {
@@ -47,12 +47,12 @@ class ZenStackGame {
         this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         this.container.appendChild(this.renderer.domElement);
 
-        // Lighting
+        // Lighting (Warm Keylight + Cool Fill)
         const ambientLight = new THREE.AmbientLight(0xffffff, 0.75);
         this.scene.add(ambientLight);
 
-        this.dirLight = new THREE.DirectionalLight(0xffffff, 0.7);
-        this.dirLight.position.set(10, 22, 15);
+        this.dirLight = new THREE.DirectionalLight(0xfffbeb, 0.85);
+        this.dirLight.position.set(12, 24, 16);
         this.dirLight.castShadow = true;
         this.dirLight.shadow.mapSize.width = 1024;
         this.dirLight.shadow.mapSize.height = 1024;
@@ -60,13 +60,7 @@ class ZenStackGame {
 
         this.shakeIntensity = 0;
 
-        // Avatar Jump State
-        this.avatarVy = 0;
-        this.isJumping = false;
-        this.flipRotation = 0;
-
         this.initBase();
-        this.initHighDetailAvatar();
         this.initEvents();
 
         this.clock = new THREE.Clock();
@@ -111,7 +105,7 @@ class ZenStackGame {
             return new THREE.MeshStandardMaterial({
                 color: new THREE.Color(`hsl(${blockHue}, 80%, 58%)`),
                 roughness: 0.25,
-                metalness: 0.1
+                metalness: 0.15
             });
         }
     }
@@ -133,114 +127,6 @@ class ZenStackGame {
         document.getElementById('high-score-val').innerText = this.highScore;
         document.getElementById('coins-val').innerText = this.coins;
         this.updateLandmarkBadge();
-    }
-
-    initHighDetailAvatar() {
-        this.avatar = new THREE.Group();
-        this.avatarPivot = new THREE.Group(); // Inner container for backflips
-        this.avatar.add(this.avatarPivot);
-
-        // Materials
-        this.matsAvatar = {
-            jacket: new THREE.MeshStandardMaterial({ color: 0x3b82f6, roughness: 0.4 }),
-            skin: new THREE.MeshStandardMaterial({ color: 0xfde047, roughness: 0.3 }),
-            pants: new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.5 }),
-            shoes: new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.2 }),
-            visor: new THREE.MeshStandardMaterial({ color: 0x38bdf8, emissive: 0x0284c7, roughness: 0.1 }),
-            pack: new THREE.MeshStandardMaterial({ color: 0xf59e0b, metalness: 0.6 })
-        };
-
-        // 1. Torso / Jacket
-        const torsoGeom = new THREE.BoxGeometry(0.48, 0.55, 0.32);
-        this.torsoMesh = new THREE.Mesh(torsoGeom, this.matsAvatar.jacket);
-        this.torsoMesh.position.y = 0.55;
-        this.torsoMesh.castShadow = true;
-        this.avatarPivot.add(this.torsoMesh);
-
-        // 2. Cyber Jetpack / Backpack
-        const packGeom = new THREE.BoxGeometry(0.35, 0.38, 0.18);
-        const packMesh = new THREE.Mesh(packGeom, this.matsAvatar.pack);
-        packMesh.position.set(0, 0.55, -0.22);
-        packMesh.castShadow = true;
-        this.avatarPivot.add(packMesh);
-
-        // 3. Head & Neon Visor
-        const headGeom = new THREE.BoxGeometry(0.36, 0.36, 0.34);
-        this.headMesh = new THREE.Mesh(headGeom, this.matsAvatar.skin);
-        this.headMesh.position.y = 1.02;
-        this.headMesh.castShadow = true;
-        this.avatarPivot.add(this.headMesh);
-
-        const visorGeom = new THREE.BoxGeometry(0.38, 0.12, 0.15);
-        const visorMesh = new THREE.Mesh(visorGeom, this.matsAvatar.visor);
-        visorMesh.position.set(0, 1.04, 0.15);
-        this.avatarPivot.add(visorMesh);
-
-        // 4. Arms (Left & Right)
-        const armGeom = new THREE.BoxGeometry(0.12, 0.42, 0.12);
-
-        this.leftArm = new THREE.Mesh(armGeom, this.matsAvatar.jacket);
-        this.leftArm.position.set(-0.32, 0.52, 0);
-        this.avatarPivot.add(this.leftArm);
-
-        this.rightArm = new THREE.Mesh(armGeom, this.matsAvatar.jacket);
-        this.rightArm.position.set(0.32, 0.52, 0);
-        this.avatarPivot.add(this.rightArm);
-
-        // 5. Legs & High-Top Sneakers
-        const legGeom = new THREE.BoxGeometry(0.15, 0.38, 0.15);
-
-        this.leftLeg = new THREE.Mesh(legGeom, this.matsAvatar.pants);
-        this.leftLeg.position.set(-0.14, 0.19, 0);
-        this.avatarPivot.add(this.leftLeg);
-
-        this.rightLeg = new THREE.Mesh(legGeom, this.matsAvatar.pants);
-        this.rightLeg.position.set(0.14, 0.19, 0);
-        this.avatarPivot.add(this.rightLeg);
-
-        // Sneakers (Left & Right)
-        const shoeGeom = new THREE.BoxGeometry(0.17, 0.12, 0.26);
-
-        const leftShoe = new THREE.Mesh(shoeGeom, this.matsAvatar.shoes);
-        leftShoe.position.set(-0.14, 0.06, 0.04);
-        leftShoe.castShadow = true;
-        this.avatarPivot.add(leftShoe);
-
-        const rightShoe = new THREE.Mesh(shoeGeom, this.matsAvatar.shoes);
-        rightShoe.position.set(0.14, 0.06, 0.04);
-        rightShoe.castShadow = true;
-        this.avatarPivot.add(rightShoe);
-
-        this.avatar.position.set(0, 0, 0);
-        this.scene.add(this.avatar);
-        this.updateAvatarSkin();
-    }
-
-    updateAvatarSkin() {
-        if (!this.matsAvatar) return;
-
-        if (this.selectedSkin === 'cyberpunk') {
-            this.matsAvatar.jacket.color.setHex(0x06b6d4);
-            this.matsAvatar.visor.color.setHex(0xec4899);
-            this.matsAvatar.visor.emissive.setHex(0xbe185d);
-            this.matsAvatar.pack.color.setHex(0xa855f7);
-        } else if (this.selectedSkin === 'bamboo') {
-            this.matsAvatar.jacket.color.setHex(0x15803d);
-            this.matsAvatar.visor.color.setHex(0x86efac);
-            this.matsAvatar.visor.emissive.setHex(0x22c55e);
-            this.matsAvatar.pack.color.setHex(0xeab308);
-        } else if (this.selectedSkin === 'gold') {
-            this.matsAvatar.jacket.color.setHex(0xfbbf24);
-            this.matsAvatar.visor.color.setHex(0xffedd5);
-            this.matsAvatar.visor.emissive.setHex(0xd97706);
-            this.matsAvatar.pack.color.setHex(0xffffff);
-        } else {
-            // Classic
-            this.matsAvatar.jacket.color.setHex(0x3b82f6);
-            this.matsAvatar.visor.color.setHex(0x38bdf8);
-            this.matsAvatar.visor.emissive.setHex(0x0284c7);
-            this.matsAvatar.pack.color.setHex(0xf59e0b);
-        }
     }
 
     updateLandmarkBadge() {
@@ -307,32 +193,8 @@ class ZenStackGame {
         }
     }
 
-    triggerJetpackTrail() {
-        if (!this.avatar) return;
-        const pos = this.avatar.position.clone();
-        pos.y += 0.2;
-
-        const p = new THREE.Mesh(
-            new THREE.SphereGeometry(0.09, 8, 8),
-            new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.9 })
-        );
-        p.position.copy(pos);
-        this.scene.add(p);
-        this.particles.push({
-            mesh: p,
-            vel: new THREE.Vector3((Math.random() - 0.5) * 0.03, -0.05, (Math.random() - 0.5) * 0.03),
-            life: 0.6
-        });
-    }
-
     triggerScreenShake() {
         this.shakeIntensity = 0.22;
-    }
-
-    triggerAvatarJump() {
-        this.avatarVy = 0.38; // Launch upward velocity
-        this.isJumping = true;
-        this.flipRotation = 0;
     }
 
     placeBlock() {
@@ -347,9 +209,6 @@ class ZenStackGame {
         }
 
         if (!this.activeBlock) return;
-
-        // Trigger Avatar Jump & Jetpack Trail!
-        this.triggerAvatarJump();
 
         const prev = this.stack[this.stack.length - 1];
         const active = this.activeBlock;
@@ -462,12 +321,6 @@ class ZenStackGame {
         const currentHue = (this.hue + (this.score * 5)) % 360;
         this.updateBackgroundHue(currentHue);
 
-        // Avatar Landing Squash & Position Reset
-        const newTopY = (this.stack.length - 1) * this.boxHeight;
-        this.avatar.position.set(posX, newTopY, posZ);
-        this.avatarPivot.rotation.x = 0; // Reset flip
-        this.avatar.scale.set(1.3, 0.7, 1.3); // Superhero Landing Squash
-
         this.spawnNextBlock();
     }
 
@@ -483,13 +336,6 @@ class ZenStackGame {
                 fallSpeed: 0.22
             });
         }
-
-        // Tumble avatar off tower on miss
-        this.debris.push({
-            mesh: this.avatar,
-            rotSpeed: { x: 0.18, z: 0.18 },
-            fallSpeed: 0.28
-        });
 
         if (this.score > this.highScore) {
             this.highScore = this.score;
@@ -523,7 +369,7 @@ class ZenStackGame {
         // Purge ALL 3D meshes except base platform
         const toRemove = [];
         this.scene.traverse((child) => {
-            if (child.isMesh && child !== this.baseMesh && !this.avatar.children.includes(child) && !this.avatarPivot.children.includes(child)) {
+            if (child.isMesh && child !== this.baseMesh) {
                 toRemove.push(child);
             }
         });
@@ -537,14 +383,6 @@ class ZenStackGame {
             position: { x: 0, z: 0 },
             size: { x: 3.2, z: 3.2 }
         }];
-
-        if (!this.scene.children.includes(this.avatar)) {
-            this.scene.add(this.avatar);
-        }
-        this.avatar.position.set(0, 0, 0);
-        this.avatarPivot.rotation.set(0, 0, 0);
-        this.avatar.scale.set(1, 1, 1);
-        this.updateAvatarSkin();
 
         this.activeBlock = null;
         this.debris = [];
@@ -562,15 +400,6 @@ class ZenStackGame {
         document.getElementById('game-over-modal').style.display = 'none';
         this.isGameOver = false;
         this.isPlaying = true;
-
-        if (!this.scene.children.includes(this.avatar)) {
-            this.scene.add(this.avatar);
-        }
-        const topY = (this.stack.length - 1) * this.boxHeight;
-        const lastPos = this.stack[this.stack.length - 1].position;
-        this.avatar.position.set(lastPos.x, topY, lastPos.z);
-        this.avatarPivot.rotation.set(0, 0, 0);
-
         this.boxSize = { x: Math.max(2.0, this.boxSize.x), z: Math.max(2.0, this.boxSize.z) };
         this.spawnNextBlock();
     }
@@ -637,10 +466,10 @@ class ZenStackGame {
         container.innerHTML = '';
 
         const skins = [
-            { id: 'classic', title: 'Runner Max', price: 0, color: 'linear-gradient(135deg, #3b82f6, #8b5cf6)' },
-            { id: 'cyberpunk', title: 'Cyber Bot', price: 150, color: 'linear-gradient(135deg, #06b6d4, #ec4899)' },
-            { id: 'bamboo', title: 'Zen Runner', price: 300, color: 'linear-gradient(135deg, #15803d, #86efac)' },
-            { id: 'gold', title: 'Gold Master VIP', price: 500, color: 'linear-gradient(135deg, #fbbf24, #d97706)' }
+            { id: 'classic', title: 'Classic Gradient', price: 0, color: 'linear-gradient(135deg, #3b82f6, #8b5cf6)' },
+            { id: 'cyberpunk', title: 'Cyberpunk Neon', price: 150, color: 'linear-gradient(135deg, #06b6d4, #ec4899)' },
+            { id: 'bamboo', title: 'Zen Bamboo', price: 300, color: 'linear-gradient(135deg, #15803d, #86efac)' },
+            { id: 'gold', title: 'Gold Foil VIP', price: 500, color: 'linear-gradient(135deg, #fbbf24, #d97706)' }
         ];
 
         skins.forEach(skin => {
@@ -663,7 +492,6 @@ class ZenStackGame {
 
                 if (isUnlocked) {
                     this.selectedSkin = skin.id;
-                    this.updateAvatarSkin();
                     window.storageManager.save({
                         highScore: this.highScore,
                         coins: this.coins,
@@ -676,7 +504,6 @@ class ZenStackGame {
                     this.coins -= skin.price;
                     this.unlockedSkins.push(skin.id);
                     this.selectedSkin = skin.id;
-                    this.updateAvatarSkin();
                     document.getElementById('coins-val').innerText = this.coins;
 
                     window.storageManager.save({
@@ -698,45 +525,6 @@ class ZenStackGame {
         requestAnimationFrame(this.animate);
         const delta = this.clock.getDelta();
 
-        // 1. Procedural Avatar Animations
-        if (this.isJumping) {
-            this.avatar.position.y += this.avatarVy;
-            this.avatarVy -= 0.024; // Gravity pull
-
-            // Mid-air Backflip spin rotation!
-            this.avatarPivot.rotation.x -= delta * 10;
-            this.triggerJetpackTrail();
-
-            // Limb dynamics in air
-            this.leftArm.rotation.x = -Math.PI / 3;
-            this.rightArm.rotation.x = Math.PI / 3;
-            this.leftLeg.rotation.x = Math.PI / 4;
-            this.rightLeg.rotation.x = -Math.PI / 4;
-
-            const targetTopY = (this.stack.length - 1) * this.boxHeight;
-            if (this.avatar.position.y <= targetTopY) {
-                this.avatar.position.y = targetTopY;
-                this.isJumping = false;
-                this.avatarVy = 0;
-                this.avatarPivot.rotation.x = 0; // Reset upright
-                this.leftArm.rotation.x = 0;
-                this.rightArm.rotation.x = 0;
-                this.leftLeg.rotation.x = 0;
-                this.rightLeg.rotation.x = 0;
-            }
-        } else if (this.isPlaying) {
-            // Idle breathing & limb bobbing animation
-            const breathe = Math.sin(this.clock.getElapsedTime() * 6) * 0.03;
-            this.torsoMesh.position.y = 0.55 + breathe;
-            this.headMesh.position.y = 1.02 + breathe;
-        }
-
-        // Lerp Superhero Landing Squash & Stretch back to 1.0
-        this.avatar.scale.x = THREE.MathUtils.lerp(this.avatar.scale.x, 1, 0.15);
-        this.avatar.scale.y = THREE.MathUtils.lerp(this.avatar.scale.y, 1, 0.15);
-        this.avatar.scale.z = THREE.MathUtils.lerp(this.avatar.scale.z, 1, 0.15);
-
-        // 2. Active Moving Block Ping-Pong
         if (this.isPlaying && this.activeBlock) {
             const axis = this.activeBlock.axis;
             const speedScale = 2.2 + Math.min(2.5, this.score * 0.04);
@@ -744,7 +532,6 @@ class ZenStackGame {
             this.activeBlock.mesh.position[axis] = Math.sin(time) * 4.8;
         }
 
-        // 3. Animate Particles
         for (let i = this.particles.length - 1; i >= 0; i--) {
             const p = this.particles[i];
             p.mesh.position.add(p.vel);
@@ -757,7 +544,6 @@ class ZenStackGame {
             }
         }
 
-        // 4. Animate Falling Debris
         for (let i = this.debris.length - 1; i >= 0; i--) {
             const d = this.debris[i];
             d.mesh.position.y -= d.fallSpeed;
@@ -770,7 +556,6 @@ class ZenStackGame {
             }
         }
 
-        // 5. Camera Ascent & Screen Shake
         if (this.isPlaying) {
             const targetY = (this.stack.length * this.boxHeight) + 6;
             this.cameraBasePos.y = THREE.MathUtils.lerp(this.cameraBasePos.y, targetY + 8, 0.06);
