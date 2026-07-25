@@ -1,4 +1,4 @@
-// Zen Stack 3D - Fixed 3D Scene Purge & Stack Placement Architecture
+// Zen Stack 3D - High-Performance 3D Engine with 3D Character Avatar Jump Physics
 
 class ZenStackGame {
     constructor() {
@@ -60,7 +60,13 @@ class ZenStackGame {
 
         this.shakeIntensity = 0;
 
+        // Avatar Jump State
+        this.avatarY = 0;
+        this.avatarVy = 0;
+        this.isJumping = false;
+
         this.initBase();
+        this.initAvatar();
         this.initEvents();
 
         this.clock = new THREE.Clock();
@@ -127,6 +133,56 @@ class ZenStackGame {
         document.getElementById('high-score-val').innerText = this.highScore;
         document.getElementById('coins-val').innerText = this.coins;
         this.updateLandmarkBadge();
+    }
+
+    initAvatar() {
+        this.avatar = new THREE.Group();
+
+        // 3D Avatar Body (Capsule/Torso)
+        const bodyMat = new THREE.MeshStandardMaterial({ color: 0x3b82f6, roughness: 0.3 });
+        const bodyGeom = new THREE.CylinderGeometry(0.32, 0.32, 0.9, 16);
+        this.avatarBody = new THREE.Mesh(bodyGeom, bodyMat);
+        this.avatarBody.position.y = 0.45;
+        this.avatarBody.castShadow = true;
+        this.avatar.add(this.avatarBody);
+
+        // 3D Avatar Head
+        const headMat = new THREE.MeshStandardMaterial({ color: 0xfde047, roughness: 0.2 });
+        const headGeom = new THREE.SphereGeometry(0.28, 16, 16);
+        this.avatarHead = new THREE.Mesh(headGeom, headMat);
+        this.avatarHead.position.y = 1.15;
+        this.avatarHead.castShadow = true;
+        this.avatar.add(this.avatarHead);
+
+        // Eyes Visor
+        const visorMat = new THREE.MeshStandardMaterial({ color: 0x0f172a });
+        const visorGeom = new THREE.BoxGeometry(0.35, 0.12, 0.2);
+        const visor = new THREE.Mesh(visorGeom, visorMat);
+        visor.position.set(0, 1.18, 0.18);
+        this.avatar.add(visor);
+
+        // Position Avatar standing on top of base block
+        this.avatar.position.set(0, 0, 0);
+        this.scene.add(this.avatar);
+        this.updateAvatarSkin();
+    }
+
+    updateAvatarSkin() {
+        if (!this.avatarBody || !this.avatarHead) return;
+
+        if (this.selectedSkin === 'cyberpunk') {
+            this.avatarBody.material.color.setHex(0x06b6d4);
+            this.avatarHead.material.color.setHex(0xec4899);
+        } else if (this.selectedSkin === 'bamboo') {
+            this.avatarBody.material.color.setHex(0x15803d);
+            this.avatarHead.material.color.setHex(0xfde047);
+        } else if (this.selectedSkin === 'gold') {
+            this.avatarBody.material.color.setHex(0xfbbf24);
+            this.avatarHead.material.color.setHex(0xffedd5);
+        } else {
+            this.avatarBody.material.color.setHex(0x3b82f6);
+            this.avatarHead.material.color.setHex(0xfde047);
+        }
     }
 
     updateLandmarkBadge() {
@@ -197,6 +253,11 @@ class ZenStackGame {
         this.shakeIntensity = 0.22;
     }
 
+    triggerAvatarJump() {
+        this.avatarVy = 0.32; // Jump launch velocity
+        this.isJumping = true;
+    }
+
     placeBlock() {
         if (!this.firstTapDone) {
             this.firstTapDone = true;
@@ -209,6 +270,9 @@ class ZenStackGame {
         }
 
         if (!this.activeBlock) return;
+
+        // Trigger Avatar Jump on Tap!
+        this.triggerAvatarJump();
 
         const prev = this.stack[this.stack.length - 1];
         const active = this.activeBlock;
@@ -246,7 +310,7 @@ class ZenStackGame {
             return;
         }
 
-        // 2. COMPLETE MISS -> GAME OVER
+        // 2. COMPLETE MISS -> GAME OVER & AVATAR FALL
         if (absDelta >= maxOverlap) {
             this.triggerGameOver(active.mesh);
             return;
@@ -296,7 +360,6 @@ class ZenStackGame {
         });
 
         this.boxSize[axis] = overlap;
-        // Fix: Store cutMesh in stack instead of old active.mesh!
         this.finalizeBlockPlacement(cutMesh, newPos.x, newPos.z);
     }
 
@@ -322,6 +385,11 @@ class ZenStackGame {
         const currentHue = (this.hue + (this.score * 5)) % 360;
         this.updateBackgroundHue(currentHue);
 
+        // Land Avatar on top of new block with Squash & Stretch
+        const newTopY = (this.stack.length - 1) * this.boxHeight;
+        this.avatar.position.set(posX, newTopY, posZ);
+        this.avatar.scale.set(1.25, 0.75, 1.25); // Landing Squash
+
         this.spawnNextBlock();
     }
 
@@ -337,6 +405,13 @@ class ZenStackGame {
                 fallSpeed: 0.22
             });
         }
+
+        // Avatar falls off tower on miss
+        this.debris.push({
+            mesh: this.avatar,
+            rotSpeed: { x: 0.15, z: 0.15 },
+            fallSpeed: 0.25
+        });
 
         if (this.score > this.highScore) {
             this.highScore = this.score;
@@ -367,10 +442,10 @@ class ZenStackGame {
         document.getElementById('score-val').innerText = '0';
         document.getElementById('game-over-modal').style.display = 'none';
 
-        // Fix: Purge ALL 3D meshes from scene except the foundation baseMesh
+        // Purge ALL 3D meshes except base platform
         const toRemove = [];
         this.scene.traverse((child) => {
-            if (child.isMesh && child !== this.baseMesh) {
+            if (child.isMesh && child !== this.baseMesh && child !== this.avatarBody && child !== this.avatarHead) {
                 toRemove.push(child);
             }
         });
@@ -379,18 +454,25 @@ class ZenStackGame {
             if (mesh.geometry) mesh.geometry.dispose();
         });
 
-        // Reset stack to base foundation mesh only
         this.stack = [{
             mesh: this.baseMesh,
             position: { x: 0, z: 0 },
             size: { x: 3.2, z: 3.2 }
         }];
 
+        // Re-attach Avatar standing on base platform
+        if (!this.scene.children.includes(this.avatar)) {
+            this.scene.add(this.avatar);
+        }
+        this.avatar.position.set(0, 0, 0);
+        this.avatar.rotation.set(0, 0, 0);
+        this.avatar.scale.set(1, 1, 1);
+        this.updateAvatarSkin();
+
         this.activeBlock = null;
         this.debris = [];
         this.particles = [];
 
-        // Reset camera position & target directly to base
         this.cameraBasePos.set(12, 14, 12);
         this.camera.position.copy(this.cameraBasePos);
         this.camera.lookAt(0, 2, 0);
@@ -403,6 +485,15 @@ class ZenStackGame {
         document.getElementById('game-over-modal').style.display = 'none';
         this.isGameOver = false;
         this.isPlaying = true;
+
+        if (!this.scene.children.includes(this.avatar)) {
+            this.scene.add(this.avatar);
+        }
+        const topY = (this.stack.length - 1) * this.boxHeight;
+        const lastPos = this.stack[this.stack.length - 1].position;
+        this.avatar.position.set(lastPos.x, topY, lastPos.z);
+        this.avatar.rotation.set(0, 0, 0);
+
         this.boxSize = { x: Math.max(2.0, this.boxSize.x), z: Math.max(2.0, this.boxSize.z) };
         this.spawnNextBlock();
     }
@@ -469,10 +560,10 @@ class ZenStackGame {
         container.innerHTML = '';
 
         const skins = [
-            { id: 'classic', title: 'Classic Gradient', price: 0, color: 'linear-gradient(135deg, #3b82f6, #8b5cf6)' },
-            { id: 'cyberpunk', title: 'Cyberpunk Neon', price: 150, color: 'linear-gradient(135deg, #06b6d4, #ec4899)' },
-            { id: 'bamboo', title: 'Zen Bamboo', price: 300, color: 'linear-gradient(135deg, #15803d, #86efac)' },
-            { id: 'gold', title: 'Gold Foil VIP', price: 500, color: 'linear-gradient(135deg, #fbbf24, #d97706)' }
+            { id: 'classic', title: 'Runner Max', price: 0, color: 'linear-gradient(135deg, #3b82f6, #8b5cf6)' },
+            { id: 'cyberpunk', title: 'Cyber Bot', price: 150, color: 'linear-gradient(135deg, #06b6d4, #ec4899)' },
+            { id: 'bamboo', title: 'Zen Runner', price: 300, color: 'linear-gradient(135deg, #15803d, #86efac)' },
+            { id: 'gold', title: 'Gold Master VIP', price: 500, color: 'linear-gradient(135deg, #fbbf24, #d97706)' }
         ];
 
         skins.forEach(skin => {
@@ -495,6 +586,7 @@ class ZenStackGame {
 
                 if (isUnlocked) {
                     this.selectedSkin = skin.id;
+                    this.updateAvatarSkin();
                     window.storageManager.save({
                         highScore: this.highScore,
                         coins: this.coins,
@@ -507,6 +599,7 @@ class ZenStackGame {
                     this.coins -= skin.price;
                     this.unlockedSkins.push(skin.id);
                     this.selectedSkin = skin.id;
+                    this.updateAvatarSkin();
                     document.getElementById('coins-val').innerText = this.coins;
 
                     window.storageManager.save({
@@ -528,6 +621,25 @@ class ZenStackGame {
         requestAnimationFrame(this.animate);
         const delta = this.clock.getDelta();
 
+        // 1. Avatar Physics & Jump Scale Lerp
+        if (this.isJumping) {
+            this.avatar.position.y += this.avatarVy;
+            this.avatarVy -= 0.025; // Gravity pull
+
+            const targetTopY = (this.stack.length - 1) * this.boxHeight;
+            if (this.avatar.position.y <= targetTopY) {
+                this.avatar.position.y = targetTopY;
+                this.isJumping = false;
+                this.avatarVy = 0;
+            }
+        }
+
+        // Lerp Squash & Stretch back to 1.0
+        this.avatar.scale.x = THREE.MathUtils.lerp(this.avatar.scale.x, 1, 0.15);
+        this.avatar.scale.y = THREE.MathUtils.lerp(this.avatar.scale.y, 1, 0.15);
+        this.avatar.scale.z = THREE.MathUtils.lerp(this.avatar.scale.z, 1, 0.15);
+
+        // 2. Active Moving Block Ping-Pong
         if (this.isPlaying && this.activeBlock) {
             const axis = this.activeBlock.axis;
             const speedScale = 2.2 + Math.min(2.5, this.score * 0.04);
@@ -535,6 +647,7 @@ class ZenStackGame {
             this.activeBlock.mesh.position[axis] = Math.sin(time) * 4.8;
         }
 
+        // 3. Animate Particles
         for (let i = this.particles.length - 1; i >= 0; i--) {
             const p = this.particles[i];
             p.mesh.position.add(p.vel);
@@ -547,6 +660,7 @@ class ZenStackGame {
             }
         }
 
+        // 4. Animate Falling Debris
         for (let i = this.debris.length - 1; i >= 0; i--) {
             const d = this.debris[i];
             d.mesh.position.y -= d.fallSpeed;
@@ -559,6 +673,7 @@ class ZenStackGame {
             }
         }
 
+        // 5. Camera Ascent & Screen Shake
         if (this.isPlaying) {
             const targetY = (this.stack.length * this.boxHeight) + 6;
             this.cameraBasePos.y = THREE.MathUtils.lerp(this.cameraBasePos.y, targetY + 8, 0.06);
